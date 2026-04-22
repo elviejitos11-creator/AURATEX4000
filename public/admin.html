@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AURATEX Admin</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div>
+      <h1>AURATEX</h1>
+      <p>Panel central</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Crear perfil</h2>
+      <input id="p_name" placeholder="Nombre del perfil" />
+      <input id="p_agentName" placeholder="Nombre de la telefonista" />
+      <input id="p_agentPhone" placeholder="Teléfono de la telefonista" />
+      <input id="p_agentPass" placeholder="Clave de la telefonista" value="1234" />
+      <input id="p_twilioNumber" placeholder="Número Twilio. Ej: +12025550111" />
+      <button onclick="createProfile()">Guardar perfil</button>
+      <p id="adminMsg" class="msg-line"></p>
+    </section>
+
+    <section class="card">
+      <h2>Perfiles</h2>
+      <div id="profilesList"></div>
+    </section>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

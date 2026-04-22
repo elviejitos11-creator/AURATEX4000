@@ -1,0 +1,155 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #03060b;
+  color: #fff;
+}
+
+.auth-body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top, #08131f, #020406 60%);
+}
+
+.auth-card, .card {
+  background: rgba(9, 15, 24, 0.96);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 0 30px rgba(0, 180, 255, 0.12);
+}
+
+.auth-card {
+  width: 360px;
+}
+
+.logo {
+  text-align: center;
+  letter-spacing: 4px;
+  color: #bdf4ff;
+  margin-bottom: 6px;
+}
+
+.sub {
+  text-align: center;
+  color: #8aa2b0;
+  margin-bottom: 20px;
+}
+
+input, textarea, button {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 12px;
+  border: none;
+  padding: 14px;
+  font-size: 16px;
+}
+
+input, textarea {
+  background: #0d1622;
+  color: #fff;
+  border: 1px solid #1f3242;
+}
+
+button {
+  background: #19c6f0;
+  color: #001017;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.topbar {
+  padding: 18px 24px;
+  border-bottom: 1px solid #10202d;
+  background: #050a11;
+}
+
+.topbar h1 {
+  margin: 0;
+  color: #bdf4ff;
+  letter-spacing: 4px;
+}
+
+.topbar p {
+  margin: 4px 0 0;
+  color: #7f94a0;
+}
+
+.grid, .chat-layout {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+}
+
+.grid {
+  grid-template-columns: 380px 1fr;
+}
+
+.chat-layout {
+  grid-template-columns: 360px 1fr;
+}
+
+#profilesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-item, .msg-item {
+  padding: 14px;
+  border-radius: 14px;
+  background: #0d1622;
+  border: 1px solid #1b3040;
+}
+
+.profile-item a {
+  color: #73e5ff;
+  text-decoration: none;
+}
+
+.chat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.msg-in {
+  border-left: 4px solid #19c6f0;
+}
+
+.msg-out {
+  border-left: 4px solid #4cff88;
+}
+
+.msg-line {
+  color: #9db2bf;
+  min-height: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.tab {
+  flex: 1;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .grid, .chat-layout {
+    grid-template-columns: 1fr;
+  }
+}

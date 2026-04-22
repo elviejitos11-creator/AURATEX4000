@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AURATEX Telefonista</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div>
+      <h1>AURATEX</h1>
+      <p id="agentTitle">Telefonista</p>
+    </div>
+  </div>
+
+  <div class="chat-layout">
+    <div class="card">
+      <h2>Enviar mensaje</h2>
+      <input id="sendTo" placeholder="Número del cliente. Ej: +18095551234" />
+      <textarea id="sendBody" placeholder="Escribe el mensaje"></textarea>
+      <button onclick="sendMessage()">Enviar</button>
+      <p id="agentMsg" class="msg-line"></p>
+    </div>
+
+    <div class="card">
+      <h2>Mensajes</h2>
+      <div id="chatBox" class="chat-box"></div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
