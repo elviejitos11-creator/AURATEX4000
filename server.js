@@ -5,12 +5,14 @@ const fs = require("fs");
 const path = require("path");
 const twilio = require("twilio");
 const webpush = require("web-push");
+require("dotenv").config();
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
+
 const DATA_DIR = path.join(__dirname, "data");
 const PUBLIC_DIR = path.join(__dirname, "public");
 
@@ -23,12 +25,16 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(PUBLIC_DIR));
 
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
 function ensureFile(filePath, defaultData) {
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2), "utf8");
   }
 }
-require('dotenv').config();
+
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
@@ -41,29 +47,19 @@ ensureFile(profilesFile, []);
 ensureFile(messagesFile, []);
 ensureFile(pushSubscriptionsFile, []);
 ensureFile(settingsFile, {
-  appName: "AURATEX",
-  adminUser: "admin",
-  adminPass: "1234"
+  appName: "AURATEX"
 });
 
-/* =========================================================
-   AQUI VAS A PEGAR TU SID Y TU TOKEN DE TWILIO
-   SOLO REEMPLAZA LOS TEXTOS ENTRE COMILLAS
-   ========================================================= */
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-/* =========================================================
-   CLAVES PUSH
-   SI TODAVIA NO LAS TIENES, DEJALAS ASI POR AHORA
-   ========================================================= */
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASS = process.env.ADMIN_PASS || "1234";
 
-const VAPID_PUBLIC_KEY = "PEGA_AQUI_TU_VAPID_PUBLIC_KEY";
-const VAPID_PRIVATE_KEY = "PEGA_AQUI_TU_VAPID_PRIVATE_KEY";
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || "";
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || "";
 
-if (
-  VAPID_PUBLIC_KEY !== "PEGA_AQUI_TU_VAPID_PUBLIC_KEY" &&
-  VAPID_PRIVATE_KEY !== "PEGA_AQUI_TU_VAPID_PRIVATE_KEY"
-) {
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "";
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
     "mailto:admin@auratex.local",
     VAPID_PUBLIC_KEY,
@@ -72,10 +68,7 @@ if (
 }
 
 let twilioClient = null;
-if (
-  TWILIO_ACCOUNT_SID !== "PEGA_AQUI_TU_ACCOUNT_SID" &&
-  TWILIO_AUTH_TOKEN !== "PEGA_AQUI_TU_AUTH_TOKEN"
-) {
+if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
   twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 }
 
@@ -97,16 +90,10 @@ function createId(prefix = "id") {
 }
 
 async function sendPushToProfile(profileSlug, payload) {
-  if (
-    VAPID_PUBLIC_KEY === "PEGA_AQUI_TU_VAPID_PUBLIC_KEY" ||
-    VAPID_PRIVATE_KEY === "PEGA_AQUI_TU_VAPID_PRIVATE_KEY"
-  ) {
-    return;
-  }
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
 
   let subscriptions = readJson(pushSubscriptionsFile);
   const profileSubs = subscriptions.filter((s) => s.profileSlug === profileSlug);
-
   const invalidEndpoints = [];
 
   for (const sub of profileSubs) {
@@ -136,21 +123,23 @@ app.get("/api/settings", (req, res) => {
   const settings = readJson(settingsFile);
   res.json({
     ...settings,
-    vapidPublicKey:
-      VAPID_PUBLIC_KEY !== "PEGA_AQUI_TU_VAPID_PUBLIC_KEY" ? VAPID_PUBLIC_KEY : ""
+    vapidPublicKey: VAPID_PUBLIC_KEY || ""
   });
 });
 
 app.post("/api/login", (req, res) => {
   const { user, pass, role, profileSlug } = req.body;
-  const settings = readJson(settingsFile);
   const profiles = readJson(profilesFile);
 
   if (role === "admin") {
-    if (user === settings.adminUser && pass === settings.adminPass) {
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
       return res.json({ ok: true, role: "admin", redirect: "/admin.html" });
     }
-    return res.status(401).json({ ok: false, error: "Credenciales admin incorrectas" });
+
+    return res.status(401).json({
+      ok: false,
+      error: "Credenciales admin incorrectas"
+    });
   }
 
   if (role === "agent") {
@@ -159,7 +148,10 @@ app.post("/api/login", (req, res) => {
     );
 
     if (!profile) {
-      return res.status(401).json({ ok: false, error: "Acceso de telefonista incorrecto" });
+      return res.status(401).json({
+        ok: false,
+        error: "Acceso de telefonista incorrecto"
+      });
     }
 
     return res.json({
@@ -188,7 +180,10 @@ app.post("/api/profiles", (req, res) => {
   const twilioNumber = (req.body.twilioNumber || "").trim();
 
   if (!name) {
-    return res.status(400).json({ ok: false, error: "Nombre del perfil requerido" });
+    return res.status(400).json({
+      ok: false,
+      error: "Nombre del perfil requerido"
+    });
   }
 
   let slug = slugify(name);
@@ -221,7 +216,10 @@ app.put("/api/profiles/:slug", (req, res) => {
   const idx = profiles.findIndex((p) => p.slug === req.params.slug);
 
   if (idx === -1) {
-    return res.status(404).json({ ok: false, error: "Perfil no encontrado" });
+    return res.status(404).json({
+      ok: false,
+      error: "Perfil no encontrado"
+    });
   }
 
   profiles[idx] = {
@@ -231,7 +229,10 @@ app.put("/api/profiles/:slug", (req, res) => {
     agentPhone: req.body.agentPhone ?? profiles[idx].agentPhone,
     agentPass: req.body.agentPass ?? profiles[idx].agentPass,
     twilioNumber: req.body.twilioNumber ?? profiles[idx].twilioNumber,
-    active: typeof req.body.active === "boolean" ? req.body.active : profiles[idx].active
+    active:
+      typeof req.body.active === "boolean"
+        ? req.body.active
+        : profiles[idx].active
   };
 
   writeJson(profilesFile, profiles);
@@ -241,7 +242,9 @@ app.put("/api/profiles/:slug", (req, res) => {
 app.get("/api/messages", (req, res) => {
   const messages = readJson(messagesFile);
   const profile = req.query.profile || "";
+
   if (!profile) return res.json(messages);
+
   res.json(messages.filter((m) => m.profileSlug === profile));
 });
 
@@ -250,7 +253,10 @@ app.post("/api/messages/send", async (req, res) => {
     const { profileSlug, to, body } = req.body;
 
     if (!profileSlug || !to || !body) {
-      return res.status(400).json({ ok: false, error: "Faltan datos" });
+      return res.status(400).json({
+        ok: false,
+        error: "Faltan datos"
+      });
     }
 
     const profiles = readJson(profilesFile);
@@ -258,7 +264,10 @@ app.post("/api/messages/send", async (req, res) => {
     const profile = profiles.find((p) => p.slug === profileSlug);
 
     if (!profile) {
-      return res.status(404).json({ ok: false, error: "Perfil no encontrado" });
+      return res.status(404).json({
+        ok: false,
+        error: "Perfil no encontrado"
+      });
     }
 
     let twilioSid = null;
@@ -269,6 +278,7 @@ app.post("/api/messages/send", async (req, res) => {
         from: profile.twilioNumber,
         to
       });
+
       twilioSid = response.sid;
     }
 
@@ -291,7 +301,10 @@ app.post("/api/messages/send", async (req, res) => {
     res.json({ ok: true, msg });
   } catch (error) {
     console.log("Error enviando mensaje:", error.message);
-    res.status(500).json({ ok: false, error: error.message });
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
   }
 });
 
@@ -299,7 +312,10 @@ app.post("/api/push/subscribe", (req, res) => {
   const { profileSlug, subscription } = req.body;
 
   if (!profileSlug || !subscription || !subscription.endpoint) {
-    return res.status(400).json({ ok: false, error: "Suscripcion invalida" });
+    return res.status(400).json({
+      ok: false,
+      error: "Suscripcion invalida"
+    });
   }
 
   const subscriptions = readJson(pushSubscriptionsFile);
@@ -318,6 +334,7 @@ app.post("/api/push/subscribe", (req, res) => {
       subscription,
       createdAt: now()
     });
+
     writeJson(pushSubscriptionsFile, subscriptions);
   }
 
@@ -369,8 +386,8 @@ io.on("connection", (socket) => {
 
 server.listen(PORT, () => {
   console.log("====================================");
-  console.log(`AURATEX corriendo en http://localhost:${PORT}`);
-  console.log("Admin: http://localhost:4000/login.html");
+  console.log(`AURATEX corriendo en puerto ${PORT}`);
+  console.log(`Admin user: ${ADMIN_USER}`);
   console.log("Webhook Twilio: /webhook/incoming");
   console.log("====================================");
 });
